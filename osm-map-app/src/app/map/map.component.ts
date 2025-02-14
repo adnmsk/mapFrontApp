@@ -75,15 +75,23 @@ export class MapComponent implements AfterViewInit {
       const L = await this.importLeaflet(); // Динамически импортируем Leaflet
 
       const point = [lat, lng] as L.LatLngExpression;
-      L.marker(point)
+      L.circleMarker(point, { // Используем circleMarker для новых точек
+        radius: 8,
+        fillColor: 'blue',
+        color: 'darkblue',
+        weight: 2,
+        opacity: 1,
+        fillOpacity: 0.8
+      })
         .addTo(this.map)
         .bindPopup(`Новая точка: ${lat}, ${lng}`)
         .openPopup();
-
       this.points.push(point);
-      this.addPolyline(L); // Перерисовываем линию после добавления новой точки
+      this.addPolyline(await this.importLeaflet());
     }
   }
+
+
 
   // Метод для добавления случайной точки
   public async addRandomPoint(): Promise<void> {
@@ -95,5 +103,6 @@ export class MapComponent implements AfterViewInit {
       await this.addPoint(lat, lng); // Добавляем точку
     }
   }
+
 
 }
