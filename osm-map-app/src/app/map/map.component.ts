@@ -95,4 +95,5 @@ export class MapComponent implements AfterViewInit {
       await this.addPoint(lat, lng); // Добавляем точку
     }
   }
+
 }
