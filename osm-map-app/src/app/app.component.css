@@ -1,5 +1,10 @@
 /* Основной контейнер */
 .container {
+  width: 100vw; /* 100% ширины экрана */
+  height: 100vh; /* 100% высоты экрана */
+  box-sizing: border-box; /* Учитывает padding и border в ширине */
+  margin: 0;
+  padding: 0;
   display: grid;
   grid-template-columns: 1fr 2fr; /* Левая колонка = 1 часть, правая = 2 части */
   grid-template-rows: 100vh; /* Высота контейнера = вся высота viewport */
