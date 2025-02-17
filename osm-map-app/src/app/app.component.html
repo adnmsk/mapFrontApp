@@ -4,13 +4,10 @@
 
 
   main {
-    width: 100%;
-    min-height: 100%;
+
     display: flex;
     justify-content: center;
     align-items: center;
-    padding: 1rem;
-    box-sizing: inherit;
     position: relative;
   }
 
@@ -23,9 +20,9 @@
 
     .divider {
       height: 1px;
-      width: 100%;
+      width: 97%;
       background: gray;
-      margin-block: 1.5rem;
+      /*margin-block: 1.5rem;*/
     }
   }
 </style>
@@ -42,6 +39,9 @@
       <nav>
       </nav>
       <button (click)="addRandomPoint()">Добавить случайную точку</button>
+        <div>
+          <app-stop-point-list></app-stop-point-list>
+        </div>
     </div>
 
     <!-- Правая часть (карта) -->
@@ -54,4 +54,4 @@
 
 
 
-<router-outlet />
+<!--<router-outlet />-->

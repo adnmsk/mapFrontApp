@@ -1,10 +1,11 @@
 import {Component, ViewChild} from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import {MapComponent} from './map/map.component';
+import {StopPointListComponent} from './entity/transport/stoppoint/stoppointlist.component';
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet, MapComponent],
+  imports: [ MapComponent, StopPointListComponent],
   templateUrl: './app.component.html',
   styleUrl: './app.component.css'
 })

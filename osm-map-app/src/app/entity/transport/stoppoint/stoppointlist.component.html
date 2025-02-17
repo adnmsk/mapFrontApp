@@ -1,7 +1,10 @@
+<div class="container">
 <h2>Список точек остановки</h2>
 
+<button (click)="addRandomStopPoint()"> Добавить случайную точку остановки</button>
 <!-- Проверяем, есть ли данные -->
 <div *ngIf="stopPoints.length > 0 && stopPoints; else noData">
+
   <table>
     <thead>
     <tr>
@@ -32,4 +35,5 @@
   <p>Точки остановки отсутствуют.</p>
 </ng-template>
 
-<button (click)="addRandomStopPoint()">Добавить случайную точку остановки</button>
+
+</div>
