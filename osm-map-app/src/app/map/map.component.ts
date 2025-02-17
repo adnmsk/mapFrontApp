@@ -1,30 +1,43 @@
 import { Component, AfterViewInit, Inject, PLATFORM_ID } from '@angular/core';
-import { isPlatformBrowser } from '@angular/common';
+import {CommonModule, isPlatformBrowser} from '@angular/common';
 import L from 'leaflet';
+import {StopPoint} from '../entity/transport/stoppoint/stoppoint';
+import {StopPointService} from '../service/stoppoint.service';
+import {Observable} from 'rxjs';
 
 @Component({
   selector: 'app-map',
   templateUrl: './map.component.html',
-  styleUrls: ['./map.component.css']
+  styleUrls: ['./map.component.css'],
+  standalone: true,
+  // imports: [CommonModule] // Добавляем CommonModule
 })
 export class MapComponent implements AfterViewInit {
   private map: L.Map | null = null; // Ссылка на карту (тип будет определен после импорта Leaflet)
+
   private points: L.LatLngExpression[] = [ // Массив точек
     [51.5, -0.09], // Точка 1
     [51.51, -0.1], // Точка 2
     [51.52, -0.11] // Точка 3
   ];
 
-  constructor(@Inject(PLATFORM_ID) private platformId: any) {}
+  private  stopPoints: any[] = []; // Массив StopPoint
+
+  constructor(
+    @Inject(PLATFORM_ID) private platformId: string,
+    private stopPointService: StopPointService // Инъекция сервиса
+  ) {}
 
   async ngAfterViewInit(): Promise<void> {
-    if (isPlatformBrowser(this.platformId)) {
+
       const L = await this.importLeaflet(); // Динамический импорт Leaflet
       this.initializeMap(L);
+      await this.loadStopPoints(); // Загружаем точки остановки
       this.addMarkers(L);
       this.addPolyline(L);
-    }
+
   }
+
 
   // Динамический импорт Leaflet
   private async importLeaflet(): Promise<typeof L> {
@@ -43,13 +56,29 @@ export class MapComponent implements AfterViewInit {
     }).addTo(this.map!);
   }
 
-  // Добавление маркеров на карту
+  private async loadStopPoints(): Promise<void> {
+    if (isPlatformBrowser(this.platformId)) {
+      // @ts-ignore
+      this.stopPoints = await this.stopPointService.getAllStopPoints();
+    }
+  }
+
+
   // @ts-ignore
-  private addMarkers(L: typeof L): void {
-    this.points.forEach((point, index) => {
-      L.marker(point)
+  private async addMarkers(L: typeof L): Promise<void> {
+    // @ts-ignore
+    this.stopPoints.forEach((stopPoint: { point: { latitude: any; longitude: any; }; persistent: { name: any; }; }, index: number) => {
+      const coords = [stopPoint.point.latitude, stopPoint.point.longitude];
+      L.circleMarker(coords, {
+        radius: 8,
+        fillColor: 'green',
+        color: 'darkgreen',
+        weight: 2,
+        opacity: 1,
+        fillOpacity: 0.8
+      })
         .addTo(this.map!)
-        .bindPopup(`Точка ${index + 1}`)
+        .bindPopup(`Точка остановки ${index + 1}: ${stopPoint.persistent.name}`)
         .openPopup();
     });
   }
@@ -103,6 +132,8 @@ export class MapComponent implements AfterViewInit {
       await this.addPoint(lat, lng); // Добавляем точку
     }
   }
+
+
 
 
 }
