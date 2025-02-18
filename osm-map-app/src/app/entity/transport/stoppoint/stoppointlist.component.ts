@@ -4,6 +4,8 @@ import {isPlatformBrowser, NgForOf} from '@angular/common';
 import {StopPoint} from './stoppoint';
 import {StopPointService} from '../../../service/stoppoint.service';
 import { CommonModule } from '@angular/common';
+import {StopPointDataService} from '../../../service/stop-point-data.service';
+import {catchError, of, tap} from 'rxjs';
 
 
 
@@ -22,6 +24,7 @@ export class StopPointListComponent implements OnInit {
 
   constructor(
     private stopPointService: StopPointService,
+    private stopPointDataService: StopPointDataService,
     @Inject(PLATFORM_ID) private platformId: string
   ) {}
 
@@ -32,16 +35,21 @@ export class StopPointListComponent implements OnInit {
   }
 
   private loadStopPoints(): void {
-    this.stopPointService.getAllStopPoints().subscribe(
-      data => {
-        console.log('Загружены точки остановки:', data); // Логируем полученные данные
-        this.stopPoints = data;
-      },
-      error => {
-        console.error('Ошибка при загрузке точек остановки:', error); // Логируем ошибки
-      }
-    );
+    this.stopPointService.getAllStopPoints()
+      .pipe(
+        tap(data => {
+          console.log('Загружены точки остановки:', data); // Логируем полученные данные
+          this.stopPoints = data;
+          this.stopPointDataService.setStopPoints(data); // Сохраняем данные в сервисе
+        }),
+        catchError(error => {
+          console.error('Ошибка при загрузке точек остановки:', error); // Логируем ошибки
+          return of(null); // Возвращаем Observable, чтобы поток не прерывался
+        })
+      )
+      .subscribe();
   }
+
 
   editStopPoint(stopPoint: StopPoint): void {
     console.log('Редактирование:', stopPoint);

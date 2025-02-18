@@ -3,7 +3,7 @@ import {CommonModule, isPlatformBrowser} from '@angular/common';
 import L from 'leaflet';
 import {StopPoint} from '../entity/transport/stoppoint/stoppoint';
 import {StopPointService} from '../service/stoppoint.service';
-import {Observable} from 'rxjs';
+import {StopPointDataService} from '../service/stop-point-data.service';
 
 @Component({
   selector: 'app-map',
@@ -25,7 +25,8 @@ export class MapComponent implements AfterViewInit {
 
   constructor(
     @Inject(PLATFORM_ID) private platformId: string,
-    private stopPointService: StopPointService // Инъекция сервиса
+    private stopPointService: StopPointService, // Инъекция сервиса
+    private stopPointDataService: StopPointDataService
   ) {}
 
   async ngAfterViewInit(): Promise<void> {
@@ -59,7 +60,7 @@ export class MapComponent implements AfterViewInit {
   private async loadStopPoints(): Promise<void> {
     if (isPlatformBrowser(this.platformId)) {
       // @ts-ignore
-      this.stopPoints = await this.stopPointService.getAllStopPoints();
+      this.stopPoints = this.stopPointDataService.getStopPoints(); // Получаем данные из сервиса
     }
   }
 
@@ -67,8 +68,8 @@ export class MapComponent implements AfterViewInit {
   // @ts-ignore
   private async addMarkers(L: typeof L): Promise<void> {
     // @ts-ignore
-    this.stopPoints.forEach((stopPoint: { point: { latitude: any; longitude: any; }; persistent: { name: any; }; }, index: number) => {
-      const coords = [stopPoint.point.latitude, stopPoint.point.longitude];
+    this.stopPoints.forEach((stopPoint: { point: { y: any; x: any; }; persistent: { name: any; id; description }; }, index: number) => {
+      const coords = [stopPoint.point.y, stopPoint.point.x];
       L.circleMarker(coords, {
         radius: 8,
         fillColor: 'green',
@@ -78,7 +79,7 @@ export class MapComponent implements AfterViewInit {
         fillOpacity: 0.8
       })
         .addTo(this.map!)
-        .bindPopup(`Точка остановки ${index + 1}: ${stopPoint.persistent.name}`)
+        .bindPopup(`StopPoint ${index + 1}: ${stopPoint.persistent.name} ${stopPoint.persistent.description} ${stopPoint.persistent.id}`)
         .openPopup();
     });
   }
