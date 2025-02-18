@@ -72,8 +72,8 @@ export class StopPointListComponent implements OnInit {
       number: Math.floor(Math.random() * 10),
       bearing: 1,
       point: {
-        latitude: 51.5 + Math.random() * 0.1,
-        longitude: -0.09 - Math.random() * 0.1
+        y: 51.5 + Math.random() * 0.1,
+        x: -0.09 - Math.random() * 0.1
       }
     };
 

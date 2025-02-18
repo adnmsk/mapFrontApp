@@ -15,15 +15,15 @@
       <th>Действия</th>
     </tr>
     </thead>
-    <tbody>
+    <tbody style="font-size: 12px">
     <tr *ngFor="let stopPoint of stopPoints">
       <td>{{ stopPoint.persistent.id }}</td>
       <td>{{ stopPoint.persistent.name }}</td>
       <td>{{ stopPoint.persistent.description }}</td>
-      <td>{{ stopPoint.point.latitude }}, {{ stopPoint.point.longitude }}</td>
+      <td>{{ stopPoint.point.y }}, {{ stopPoint.point.x }}</td>
       <td>
-        <button (click)="editStopPoint(stopPoint)">Редактировать</button>
-        <button (click)="deleteStopPoint(stopPoint.persistent.id!)">Удалить</button>
+        <button (click)="editStopPoint(stopPoint)" style="font-size: 12px">Редактировать</button>
+        <button (click)="deleteStopPoint(stopPoint.persistent.id!)" style="font-size: 12px">Удалить</button>
       </td>
     </tr>
     </tbody>
