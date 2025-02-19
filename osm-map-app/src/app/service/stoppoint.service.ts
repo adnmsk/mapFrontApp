@@ -22,8 +22,8 @@ export class StopPointService {
   }
 
   createStopPoint(stopPoint: StopPoint): Observable<StopPoint> {
-    console.log('Выполняется запрос к эндпоинту:', this.apiUrl, 'с данными:', stopPoint);
-    return this.http.post<StopPoint>(this.apiUrl, stopPoint);
+    console.log('Выполняется POST запрос к эндпоинту:', `${this.apiUrl}/create`, 'с данными:', stopPoint);
+    return this.http.post<StopPoint>(`${this.apiUrl}/create`, stopPoint);
   }
 
   updateStopPoint(stopPoint: StopPoint): Observable<StopPoint> {

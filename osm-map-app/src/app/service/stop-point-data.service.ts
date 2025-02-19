@@ -14,7 +14,7 @@ export class StopPointDataService {
   }
 
   getStopPoints(): StopPoint[] {
-    console.log("StopPoints List loaded", this.stopPointsSource.getValue());
-    return this.stopPointsSource.value;// Получаем текущие данные
+    console.log("StopPoints List loaded", this.stopPointsSource.pipe());
+    return this.stopPointsSource.getValue();// Получаем текущие данные
   }
 }

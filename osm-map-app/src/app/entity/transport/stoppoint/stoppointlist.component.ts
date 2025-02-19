@@ -1,55 +1,71 @@
-import { Component, OnInit, Inject } from '@angular/core';
-import { PLATFORM_ID } from '@angular/core';
-import {isPlatformBrowser, NgForOf} from '@angular/common';
-import {StopPoint} from './stoppoint';
-import {StopPointService} from '../../../service/stoppoint.service';
+import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { StopPoint } from './stoppoint';
+import { StopPointService } from '../../../service/stoppoint.service';
 import {StopPointDataService} from '../../../service/stop-point-data.service';
-import {catchError, of, tap} from 'rxjs';
-
-
+import L, {latLng} from 'leaflet';
 
 
 @Component({
   selector: 'app-stop-point-list',
   templateUrl: './stoppointlist.component.html',
   styleUrls: ['./stoppointlist.component.css'],
-  standalone: true, // Если это standalone-компонент
-  imports: [CommonModule], // Добавляем CommonModule
-  providers: []
+  standalone: true,
+  imports: [CommonModule]
 })
 export class StopPointListComponent implements OnInit {
-
-  stopPoints: StopPoint[] = []; // Инициализируем пустым массивом
+  stopPoints: StopPoint[] = [];
 
   constructor(
     private stopPointService: StopPointService,
-    private stopPointDataService: StopPointDataService,
-    @Inject(PLATFORM_ID) private platformId: string
+    private stopPointDataService: StopPointDataService
   ) {}
 
   ngOnInit(): void {
-    if (isPlatformBrowser(this.platformId)) {
-      this.loadStopPoints();
-    }
+    this.loadStopPoints();
+
+
   }
 
-  private loadStopPoints(): void {
-    this.stopPointService.getAllStopPoints()
-      .pipe(
-        tap(data => {
-          console.log('Загружены точки остановки:', data); // Логируем полученные данные
-          this.stopPoints = data;
-          this.stopPointDataService.setStopPoints(data); // Сохраняем данные в сервисе
-        }),
-        catchError(error => {
-          console.error('Ошибка при загрузке точек остановки:', error); // Логируем ошибки
-          return of(null); // Возвращаем Observable, чтобы поток не прерывался
-        })
-      )
-      .subscribe();
+
+
+  loadStopPoints(): void {
+    this.stopPointService.getAllStopPoints().subscribe(data => {
+      this.stopPoints = data;
+      console.log(data);
+      this.stopPointDataService.setStopPoints(data);
+    });
   }
 
+
+  public createStopPoint(coords: L.LatLngExpression): void {
+    const latLng = L.latLng(coords); // Преобразуем в L.LatLng
+
+    const newStopPoint: StopPoint = {
+      persistent: {
+        name: 'New Stop Point',
+        description: 'Description for new stop point created in FE',
+        creator: '8d6357f9-d95a-4f68-977d-3766d0efbc00',
+        locales: [{ language: 'en', name: 'New Stop Point', locale: "EN" }],
+        active: true
+      },
+      number: 1,
+      bearing: 1,
+      point: {
+        y: latLng.lat, // Широта (y)
+        x: latLng.lng // Долгота (x)
+      }
+    };
+
+    this.stopPointService.createStopPoint(newStopPoint).subscribe(
+      () => {
+        this.loadStopPoints(); // Обновляем список точек после создания
+      },
+      error => {
+        console.error('Ошибка при создании точки:', error);
+      }
+    );
+  }
 
   editStopPoint(stopPoint: StopPoint): void {
     console.log('Редактирование:', stopPoint);
@@ -67,28 +83,28 @@ export class StopPointListComponent implements OnInit {
   addRandomStopPoint(): void {
     const randomStopPoint: StopPoint = {
       persistent: {
-        id: Math.floor(Math.random() * 1000),
         name: `StopPoint_${Math.floor(Math.random() * 100)}`,
         description: 'Description for random stop point',
-        creator: 'user',
-        locales: [{
-          language: 'en', name: 'Random Stop Point',
-          locale: 'EN'
-        }],
+        creator: '8d6357f9-d95a-4f68-977d-3766d0efbc00',
+        locales: [{ language: 'en', name: 'Random Stop Point', locale:"EN" }],
         active: true
       },
       number: Math.floor(Math.random() * 10),
-      bearing: 1,
+      bearing: Math.floor(Math.random() * 360),
       point: {
-        y: 51.5 + Math.random() * 0.1,
-        x: -0.09 - Math.random() * 0.1
+        y: 51.5 + Math.random() * 0.1, // Случайная широта
+        x: -0.09 - Math.random() * 0.1 // Случайная долгота
       }
     };
 
-    this.stopPointService.createStopPoint(randomStopPoint).subscribe(() => {
-      this.loadStopPoints(); // Перезагружаем список после создания новой точки
-    });
+    this.stopPointService.createStopPoint(randomStopPoint).subscribe(
+      () => {
+        this.loadStopPoints(); // Обновляем список точек после создания
+      },
+      error => {
+        console.error('Ошибка при создании случайной точки:', error);
+      }
+    );
   }
-
 
 }

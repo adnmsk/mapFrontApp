@@ -1,10 +1,7 @@
-<div class="container">
 <h2>Список точек остановки</h2>
 
-<button (click)="addRandomStopPoint()"> Добавить случайную точку остановки</button>
-<!-- Проверяем, есть ли данные -->
-<div *ngIf="stopPoints.length > 0 && stopPoints; else noData">
-
+<!-- Таблица с точками -->
+<div *ngIf="stopPoints.length > 0; else noData">
   <table>
     <thead>
     <tr>
@@ -15,25 +12,28 @@
       <th>Действия</th>
     </tr>
     </thead>
-    <tbody style="font-size: 12px">
+    <tbody>
     <tr *ngFor="let stopPoint of stopPoints">
       <td>{{ stopPoint.persistent.id }}</td>
       <td>{{ stopPoint.persistent.name }}</td>
       <td>{{ stopPoint.persistent.description }}</td>
       <td>{{ stopPoint.point.y }}, {{ stopPoint.point.x }}</td>
       <td>
-        <button (click)="editStopPoint(stopPoint)" style="font-size: 12px">Редактировать</button>
-        <button (click)="deleteStopPoint(stopPoint.persistent.id!)" style="font-size: 12px">Удалить</button>
+        <button (click)="editStopPoint(stopPoint)">Редактировать</button>
+        <button (click)="deleteStopPoint(stopPoint.persistent.id!)">Удалить</button>
       </td>
     </tr>
     </tbody>
   </table>
 </div>
 
-<!-- Сообщение, если данных нет -->
 <ng-template #noData>
   <p>Точки остановки отсутствуют.</p>
 </ng-template>
 
 
-</div>
+
+
+<!-- Кнопка для создания случайной точки -->
+<button (click)="addRandomStopPoint()">Создать случайную точку остановки</button>
+
