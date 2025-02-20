@@ -5,6 +5,8 @@ import { StopPointService } from '../../../service/stoppoint.service';
 import {StopPointDataService} from '../../../service/stop-point-data.service';
 import L, {latLng} from 'leaflet';
 import {Observable, Subject, takeUntil, tap} from 'rxjs';
+import {MatDialog} from '@angular/material/dialog';
+import {EditStopPointDialogComponent} from '../../../edit-stop-point-dialog/edit-stop-point-dialog.component';
 
 
 @Component({
@@ -20,7 +22,8 @@ export class StopPointListComponent implements OnInit {
 
   constructor(
     private stopPointService: StopPointService,
-    private stopPointDataService: StopPointDataService
+    private stopPointDataService: StopPointDataService,
+    private dialog: MatDialog,
   ) {}
 
   ngOnInit(): void {
@@ -81,8 +84,27 @@ export class StopPointListComponent implements OnInit {
 
   editStopPoint(stopPoint: StopPoint): void {
     console.log('Редактирование:', stopPoint);
-    // Здесь можно добавить логику редактирования
+
+    const dialogRef = this.dialog.open(EditStopPointDialogComponent, {
+      width: '500px',
+      data: { stopPoint } // Передаем текущий объект StopPoint в модальное окно
+    });
+
+    dialogRef.afterClosed().subscribe((updatedStopPoint: StopPoint) => {
+      if (updatedStopPoint) { // Если объект был обновлен и возвращен
+        this.stopPointService.updateStopPoint(updatedStopPoint).subscribe({
+          next: (response) => {
+            console.log('Точка остановки успешно обновлена:', response);
+            this.loadStopPoints().subscribe(); // Обновляем список точек
+          },
+          error: (error) => {
+            console.error('Ошибка при обновлении точки остановки:', error);
+          }
+        });
+      }
+    });
   }
+
 
   deleteStopPoint(id: number): void {
     if (confirm('Вы уверены, что хотите удалить эту точку остановки?')) {

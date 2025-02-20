@@ -27,7 +27,7 @@ export class StopPointService {
   }
 
   updateStopPoint(stopPoint: StopPoint): Observable<StopPoint> {
-    const url = `${this.apiUrl}/${stopPoint.persistent.id}`;
+    const url = `${this.apiUrl}/edit`;
     console.log('Выполняется запрос к эндпоинту:', url, 'с данными:', stopPoint);
     return this.http.put<StopPoint>(url, stopPoint);
   }

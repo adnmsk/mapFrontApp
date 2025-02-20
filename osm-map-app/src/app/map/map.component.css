@@ -5,4 +5,6 @@
   background-color: dimgray; /* Цвет фона левой панели */
   padding: 5px;
   overflow-y: auto; /* Добавляем прокрутку, если контент не помещается */
+
+
 }
