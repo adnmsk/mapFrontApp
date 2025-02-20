@@ -104,11 +104,11 @@ export class MapComponent implements AfterViewInit, OnDestroy {
         zoomAnimation: false, // Отключение анимации зума
         fadeAnimation: false, // Отключение анимации появления тайлов
         markerZoomAnimation: false // Отключение анимации маркеров при зуме
-      }).setView([51.505, -0.09], 13);
+      }).setView([51.505, -0.09], 12);
 
       // Добавление слоя тайлов
       leaflet.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        maxZoom: 18,
+        maxZoom: 19,
         detectRetina: true, // Оптимизация для Retina-дисплеев
         attribution: '© OpenStreetMap contributors'
       }).addTo(this.map);
