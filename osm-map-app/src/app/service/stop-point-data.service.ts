@@ -9,8 +9,8 @@ export class StopPointDataService {
   private stopPointsSource = new BehaviorSubject<StopPoint[]>([]);
   stopPoints$ = this.stopPointsSource.asObservable(); // Общедоступный поток данных
 
-  private refreshMapSource = new Subject<void>();
-  refreshMap$ = this.refreshMapSource.asObservable(); // Поток для обновления карты
+  private refreshObjectSource = new Subject<void>();
+  refreshObject$ = this.refreshObjectSource.asObservable(); // Поток для обновления карты
 
   private createStopPointSource = new Subject<L.LatLngExpression>();
   createStopPoint$ = this.createStopPointSource.asObservable(); // Поток для создания точки
@@ -32,9 +32,11 @@ export class StopPointDataService {
   }
 
 // Метод для обновления карты
-  refreshMap(): void {
-    console.log("Refreshing Map");
-    this.refreshMapSource.next(); // Уведомляем о необходимости обновить карту
+  refreshObjects(): void {
+    console.log("Refreshing List of objects");
+    this.refreshObjectSource.next(); // Уведомляем о необходимости обновить карту
   }
+
+
 
 }

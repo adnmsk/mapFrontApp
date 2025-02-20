@@ -89,7 +89,7 @@ export class StopPointListComponent implements OnInit {
       this.stopPointService.deleteStopPoint(id).subscribe(() => {
         this.stopPoints = this.stopPoints.filter(sp => sp.persistent.id !== id); // Обновляем список
         this.stopPointDataService.setStopPoints(this.stopPoints); // Обновляем данные в сервисе
-        this.stopPointDataService.refreshMap(); // Уведомляем об обновлении карты
+        this.stopPointDataService.refreshObjects(); // Уведомляем об обновлении карты
       });
     }
   }

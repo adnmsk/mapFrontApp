@@ -65,7 +65,7 @@ export class MapComponent implements AfterViewInit, OnDestroy {
       this.loadMarkers();// Добавляем маркеры на карту
       this.subscribeToStopPoints(); // Подписываемся на изменения точек
       // Подписываемся на событие обновления карты
-      this.stopPointDataService.refreshMap$.pipe(
+      this.stopPointDataService.refreshObject$.pipe(
         takeUntil(this.destroy$) // Отписываемся при уничтожении компонента
       ).subscribe(() => {
         this.loadMarkers(); // Обновляем маркеры
