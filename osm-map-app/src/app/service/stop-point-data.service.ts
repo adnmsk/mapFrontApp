@@ -16,7 +16,13 @@ export class StopPointDataService {
   createStopPoint$ = this.createStopPointSource.asObservable(); // Поток для создания точки
 
   private editStopPointSource = new Subject<StopPoint>();
-  editStopPoint$ = this.editStopPointSource.asObservable(); // Поток для редактирования точки
+  editStopPoint$ = this.editStopPointSource.asObservable(); // Поток для редактирования точки из формы
+
+  private openEditDialogSource = new Subject<StopPoint>();
+  openEditDialog$ = this.openEditDialogSource.asObservable(); // Поток для открытия модального окна
+
+  private deleteStopPointSource = new Subject<number>();
+  deleteStopPoint$ = this.deleteStopPointSource.asObservable(); // Поток для удаления точки
 
   constructor(private stopPointService: StopPointService) {}
 
@@ -43,6 +49,16 @@ export class StopPointDataService {
   // Метод для редактирования точки
   requestEditStopPoint(stopPoint: StopPoint): void {
     this.editStopPointSource.next(stopPoint); // Отправляем точку для редактирования
+  }
+
+  // Метод для открытия модального окна редактирования
+  openEditDialog(stopPoint: StopPoint): void {
+    this.openEditDialogSource.next(stopPoint); // Отправляем точку для открытия модального окна
+  }
+
+  // Метод для удаления точки
+  requestDeleteStopPoint(id: number): void {
+    this.deleteStopPointSource.next(id); // Отправляем ID точки для удаления
   }
 
 }

@@ -36,11 +36,26 @@ export class StopPointListComponent implements OnInit {
       this.createStopPoint(coords); // Создаем точку
     });
 
-    // Подписываемся на событие редактирования точки
+    // Подписываемся на событие редактирования точки с формы
     this.stopPointDataService.editStopPoint$.pipe(
       takeUntil(this.destroy$) // Отписываемся при уничтожении компонента
     ).subscribe(stopPoint => {
       this.editStopPoint(stopPoint, false); // Редактируем точку без показа модального окна
+    });
+
+    // Подписываемся на событие открытия модального окна редактирования
+    this.stopPointDataService.openEditDialog$.pipe(
+      takeUntil(this.destroy$)
+    ).subscribe(stopPoint => {
+      this.editStopPoint(stopPoint, true); // Открываем модальное окно для редактирования
+    });
+
+
+    // Подписываемся на событие удаления точки
+    this.stopPointDataService.deleteStopPoint$.pipe(
+      takeUntil(this.destroy$)
+    ).subscribe(id => {
+      this.deleteStopPoint(id); // Удаляем точку
     });
   }
 
@@ -129,7 +144,6 @@ export class StopPointListComponent implements OnInit {
       this.stopPointService.deleteStopPoint(id).subscribe(() => {
         this.stopPoints = this.stopPoints.filter(sp => sp.persistent.id !== id); // Обновляем список
         this.stopPointDataService.setStopPoints(this.stopPoints); // Обновляем данные в сервисе
-        this.stopPointDataService.refreshObjects(); // Уведомляем об обновлении карты
       });
     }
   }

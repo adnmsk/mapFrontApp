@@ -245,6 +245,47 @@ export class MapComponent implements AfterViewInit, OnDestroy {
 
         this.map?.dragging.enable(); // Включаем перетаскивание карты обратно
       });
+
+      // Обработчик события ПКМ на маркере
+      marker.on('contextmenu', (event) => {
+        event.originalEvent.preventDefault(); // Отключаем стандартное контекстное меню
+
+        // Создаем HTML-код для попапа
+        const popupContent = `
+        <div style="padding: 10px; background-color: white; border: 1px solid #ccc;">
+          <button style="padding: 5px 10px; cursor: pointer; margin-right: 5px;" id="editPointButton">
+            Редактировать
+          </button>
+          <button style="padding: 5px 10px; cursor: pointer;" id="deletePointButton">
+            Удалить
+          </button>
+        </div>
+      `;
+
+        // Создаем попап и добавляем его на карту
+        const popup = L.popup()
+          .setLatLng(event.latlng)
+          .setContent(popupContent)
+          .openOn(this.map!);
+
+        // Обработчик для кнопки "Редактировать"
+        const editButton = document.getElementById('editPointButton');
+        if (editButton) {
+          editButton.onclick = () => {
+            popup.close(); // Закрываем попап
+            this.stopPointDataService.openEditDialog(stopPoint); // Открываем модальное окно для редактирования
+          };
+        }
+
+        // Обработчик для кнопки "Удалить"
+        const deleteButton = document.getElementById('deletePointButton');
+        if (deleteButton) {
+          deleteButton.onclick = () => {
+            popup.close(); // Закрываем попап
+            this.stopPointDataService.requestDeleteStopPoint(stopPoint.persistent.id!); // Удаляем точку
+          };
+        }
+      });
     });
   }
 
