@@ -15,6 +15,9 @@ export class StopPointDataService {
   private createStopPointSource = new Subject<L.LatLngExpression>();
   createStopPoint$ = this.createStopPointSource.asObservable(); // Поток для создания точки
 
+  private editStopPointSource = new Subject<StopPoint>();
+  editStopPoint$ = this.editStopPointSource.asObservable(); // Поток для редактирования точки
+
   constructor(private stopPointService: StopPointService) {}
 
   setStopPoints(stopPoints: StopPoint[]): void {
@@ -37,6 +40,9 @@ export class StopPointDataService {
     this.refreshObjectSource.next(); // Уведомляем о необходимости обновить карту
   }
 
-
+  // Метод для редактирования точки
+  requestEditStopPoint(stopPoint: StopPoint): void {
+    this.editStopPointSource.next(stopPoint); // Отправляем точку для редактирования
+  }
 
 }

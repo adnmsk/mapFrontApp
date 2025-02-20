@@ -164,28 +164,66 @@ export class MapComponent implements AfterViewInit, OnDestroy {
 
 
   private loadMarkers(): void {
-    if (!this.map ) return; //
+    if (!this.map) return;
+
     const stopPoints = this.stopPointDataService.getStopPoints() || []; // Получаем список точек
+
     // Очищаем старые маркеры
     this.map.eachLayer(layer => {
       if (layer instanceof L.Marker || layer instanceof L.CircleMarker) {
         this.map?.removeLayer(layer);
       }
     });
+
     // Добавляем новые маркеры
     stopPoints.forEach((stopPoint, index) => {
       const coords: LatLngExpression = [stopPoint.point.y, stopPoint.point.x];
-      L.circleMarker(coords, {
-        radius: 8,
-        fillColor: 'green',
-        color: 'darkgreen',
-        weight: 2,
-        opacity: 1,
-        fillOpacity: 0.8
-      })
-        .addTo(this.map!)
+
+      // Создаем кастомную иконку для круглого маркера
+      const circleIcon = L.divIcon({
+        className: 'circle-marker', // Класс для стилизации
+        iconSize: [16, 16], // Размер иконки
+        html: `<div style="background-color: green; width: 16px; height: 16px; border-radius: 50%; border: 2px solid darkgreen;"></div>`
+      });
+
+      // Создаем маркер с кастомной иконкой
+      const marker = L.marker(coords, {
+        icon: circleIcon,
+        draggable: true // Делаем маркер перетаскиваемым
+      }).addTo(this.map!)
         .bindPopup(`StopPoint ${stopPoint.number}: ${stopPoint.persistent.name}`)
         .openPopup();
+
+      // Обработчик события начала перетаскивания
+      marker.on('dragstart', () => {
+        console.log("Map dragging stopped");
+        this.map?.dragging.disable(); // Отключаем перетаскивание карты
+      });
+
+      // Обработчик события окончания перетаскивания
+      marker.on('dragend', (event) => {
+        const newCoords = event.target.getLatLng(); // Новые координаты маркера
+        const oldCoords: LatLngExpression = [stopPoint.point.y, stopPoint.point.x];
+
+        // Проверяем, изменились ли координаты
+        if (newCoords.lat !== oldCoords[0] || newCoords.lng !== oldCoords[1]) {
+          const confirmed = confirm(`Вы уверены, что хотите изменить координаты точки?\nНовые координаты: ${newCoords.lat}, ${newCoords.lng}`);
+
+          if (confirmed) {
+            // Обновляем координаты точки
+            stopPoint.point.y = newCoords.lat;
+            stopPoint.point.x = newCoords.lng;
+
+            // Используем сервис для редактирования точки
+            this.stopPointDataService.requestEditStopPoint(stopPoint);
+          } else {
+            // Возвращаем маркер на исходное место, если пользователь отменил изменение
+            event.target.setLatLng(oldCoords);
+          }
+        }
+
+        this.map?.dragging.enable(); // Включаем перетаскивание карты обратно
+      });
     });
   }
 

@@ -35,7 +35,15 @@ export class StopPointListComponent implements OnInit {
     ).subscribe(coords => {
       this.createStopPoint(coords); // Создаем точку
     });
+
+    // Подписываемся на событие редактирования точки
+    this.stopPointDataService.editStopPoint$.pipe(
+      takeUntil(this.destroy$) // Отписываемся при уничтожении компонента
+    ).subscribe(stopPoint => {
+      this.editStopPoint(stopPoint, false); // Редактируем точку без показа модального окна
+    });
   }
+
 
   ngOnDestroy(): void {
     this.destroy$.next(); // Отписываемся от всех подписок
@@ -82,25 +90,35 @@ export class StopPointListComponent implements OnInit {
     );
   }
 
-  editStopPoint(stopPoint: StopPoint): void {
+  editStopPoint(stopPoint: StopPoint, showDialog: boolean = true): void {
     console.log('Редактирование:', stopPoint);
 
-    const dialogRef = this.dialog.open(EditStopPointDialogComponent, {
-      width: '500px',
-      data: { stopPoint } // Передаем текущий объект StopPoint в модальное окно
-    });
+    if (showDialog) {
+      // Показываем модальное окно для редактирования
+      const dialogRef = this.dialog.open(EditStopPointDialogComponent, {
+        width: '500px',
+        data: { stopPoint } // Передаем текущий объект StopPoint в модальное окно
+      });
 
-    dialogRef.afterClosed().subscribe((updatedStopPoint: StopPoint) => {
-      if (updatedStopPoint) { // Если объект был обновлен и возвращен
-        this.stopPointService.updateStopPoint(updatedStopPoint).subscribe({
-          next: (response) => {
-            console.log('Точка остановки успешно обновлена:', response);
-            this.loadStopPoints().subscribe(); // Обновляем список точек
-          },
-          error: (error) => {
-            console.error('Ошибка при обновлении точки остановки:', error);
-          }
-        });
+      dialogRef.afterClosed().subscribe((updatedStopPoint: StopPoint) => {
+        if (updatedStopPoint) { // Если объект был обновлен и возвращен
+          this.updateStopPoint(updatedStopPoint); // Обновляем точку
+        }
+      });
+    } else {
+      // Обновляем точку без показа модального окна
+      this.updateStopPoint(stopPoint);
+    }
+  }
+
+  private updateStopPoint(stopPoint: StopPoint): void {
+    this.stopPointService.updateStopPoint(stopPoint).subscribe({
+      next: (response) => {
+        console.log('Точка остановки успешно обновлена:', response);
+        this.loadStopPoints().subscribe(); // Обновляем список точек
+      },
+      error: (error) => {
+        console.error('Ошибка при обновлении точки остановки:', error);
       }
     });
   }
