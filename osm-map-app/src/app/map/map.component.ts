@@ -45,7 +45,7 @@ export class MapComponent implements AfterViewInit, OnDestroy {
   private stopPoints: any[] = []; // Массив StopPoint
   private destroy$ = new Subject<void>(); // Для отписки
 
-  @ViewChild(StopPointListComponent) stopPointList!: StopPointListComponent; // Ссылка на StopPointListComponent
+  @ViewChild(StopPointListComponent, { static: false }) stopPointList!: StopPointListComponent;
 
 
   constructor(
