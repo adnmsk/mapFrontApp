@@ -88,6 +88,8 @@ export class StopPointListComponent implements OnInit {
     if (confirm('Вы уверены, что хотите удалить эту точку остановки?')) {
       this.stopPointService.deleteStopPoint(id).subscribe(() => {
         this.stopPoints = this.stopPoints.filter(sp => sp.persistent.id !== id); // Обновляем список
+        this.stopPointDataService.setStopPoints(this.stopPoints); // Обновляем данные в сервисе
+        this.stopPointDataService.refreshMap(); // Уведомляем об обновлении карты
       });
     }
   }
@@ -101,7 +103,7 @@ export class StopPointListComponent implements OnInit {
         locales: [{ language: 'en', name: 'Random Stop Point', locale:"EN" }],
         active: true
       },
-      number: Math.floor(Math.random() * 10),
+      number: 1,
       bearing:1,
       point: {
         y: 51.5 + Math.random() * 0.1, // Случайная широта

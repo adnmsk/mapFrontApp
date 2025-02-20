@@ -6,7 +6,7 @@ import {
   Inject,
   PLATFORM_ID,
   ViewChild,
-  ChangeDetectorRef
+  ChangeDetectorRef, OnDestroy
 } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
 import L, {
@@ -19,13 +19,15 @@ import L, {
   LatLngBoundsExpression, LatLngExpression, LatLngLiteral, Layer, LayerOptions,
   LocateOptions,
   MixinType,
-  PanOptions, PathOptions, PolylineOptions, Popup, PopupEvent, Projection, Rectangle,
+  PanOptions, PathOptions, PolylineOptions, popup, Popup, PopupEvent, Projection, Rectangle,
   SVGOverlay, Tooltip, TooltipOptions, ZoomPanOptions
 } from 'leaflet';
 import {StopPointDataService} from '../service/stop-point-data.service';
 import {StopPointService} from '../service/stoppoint.service';
 import {StopPoint} from '../entity/transport/stoppoint/stoppoint';
 import {StopPointListComponent} from '../entity/transport/stoppoint/stoppointlist.component';
+import {Subject, takeUntil} from 'rxjs';
+
 
 
 
@@ -35,12 +37,13 @@ import {StopPointListComponent} from '../entity/transport/stoppoint/stoppointlis
   imports: [ ],
   styleUrls: ['./map.component.css']
 })
-export class MapComponent implements AfterViewInit {
+export class MapComponent implements AfterViewInit, OnDestroy {
 
 
 
   private map: L.Map | null = null;
   private stopPoints: any[] = []; // Массив StopPoint
+  private destroy$ = new Subject<void>(); // Для отписки
 
   @ViewChild(StopPointListComponent) stopPointList!: StopPointListComponent; // Ссылка на StopPointListComponent
 
@@ -61,8 +64,18 @@ export class MapComponent implements AfterViewInit {
       this.initializeMap(leaflet);
       this.loadMarkers();// Добавляем маркеры на карту
       this.subscribeToStopPoints(); // Подписываемся на изменения точек
-
+      // Подписываемся на событие обновления карты
+      this.stopPointDataService.refreshMap$.pipe(
+        takeUntil(this.destroy$) // Отписываемся при уничтожении компонента
+      ).subscribe(() => {
+        this.loadMarkers(); // Обновляем маркеры
+      });
     }
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next(); // Отписываемся от всех подписок
+    this.destroy$.complete();
   }
 
   private async importLeaflet(): Promise<typeof L> {
@@ -171,7 +184,7 @@ export class MapComponent implements AfterViewInit {
         fillOpacity: 0.8
       })
         .addTo(this.map!)
-        .bindPopup(`Точка остановки ${index + 1}: ${stopPoint.persistent.name}`)
+        .bindPopup(`StopPoint ${stopPoint.number}: ${stopPoint.persistent.name}`)
         .openPopup();
     });
   }
@@ -182,6 +195,8 @@ export class MapComponent implements AfterViewInit {
       this.loadMarkers(); // Перерисовываем маркеры при изменении данных
     });
   }
+
+
 
 
 }
