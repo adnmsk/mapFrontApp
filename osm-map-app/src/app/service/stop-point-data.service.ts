@@ -33,6 +33,7 @@ export class StopPointDataService {
 
 // Метод для обновления карты
   refreshMap(): void {
+    console.log("Refreshing Map");
     this.refreshMapSource.next(); // Уведомляем о необходимости обновить карту
   }
 
