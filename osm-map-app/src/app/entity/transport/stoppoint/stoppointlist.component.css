@@ -1,0 +1,9 @@
+/* Основной контейнер */
+.container {
+  width: 100%;
+  margin: 0;
+  background-color: lightblue; /* Цвет фона левой панели */
+  padding: 5px;
+  overflow-y: auto; /* Добавляем прокрутку, если контент не помещается */
+  font-size: small;
+}

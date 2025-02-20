@@ -133,38 +133,35 @@ export class MapComponent implements AfterViewInit {
     if (button) {
       button.onclick = () => {
         console.log("Нажата кнопка сохранить остановку");
-        this.stopPointDataService.requestCreateStopPoint([lat, lng]); // Используем сервис
+        //this.stopPointDataService.requestCreateStopPoint([lat, lng]); // Используем сервис
+        this.confirmCreatePoint(lat, lng);
         popup.close(); // Закрываем попап
       };
 
     }
   }
-
   // Глобальная функция для подтверждения создания точки
   confirmCreatePoint(lat: number, lng: number): void {
     const confirmed = confirm(`Вы уверены, что хотите создать новую точку?\nКоординаты: ${lat}, ${lng}`);
-    if (confirmed && this.stopPointList) {
-      this.stopPointList.createStopPoint([lat, lng]); // Вызываем метод createStopPoint из StopPointListComponent
+    if (confirmed) {
+      console.log("Вызов метода сохранения")
+      this.stopPointDataService.requestCreateStopPoint([lat, lng]); // Вызываем метод createStopPoint из StopPointListComponent
     }
   }
 
 
   private loadMarkers(): void {
     if (!this.map ) return; //
-
     const stopPoints = this.stopPointDataService.getStopPoints() || []; // Получаем список точек
-
     // Очищаем старые маркеры
     this.map.eachLayer(layer => {
       if (layer instanceof L.Marker || layer instanceof L.CircleMarker) {
         this.map?.removeLayer(layer);
       }
     });
-
     // Добавляем новые маркеры
     stopPoints.forEach((stopPoint, index) => {
       const coords: LatLngExpression = [stopPoint.point.y, stopPoint.point.x];
-
       L.circleMarker(coords, {
         radius: 8,
         fillColor: 'green',
