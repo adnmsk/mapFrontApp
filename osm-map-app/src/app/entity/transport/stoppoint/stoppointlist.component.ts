@@ -4,7 +4,7 @@ import { StopPoint } from './stoppoint';
 import { StopPointService } from '../../../service/stoppoint.service';
 import {StopPointDataService} from '../../../service/stop-point-data.service';
 import L, {latLng} from 'leaflet';
-import {Observable, tap} from 'rxjs';
+import {Observable, Subject, takeUntil, tap} from 'rxjs';
 
 
 @Component({
@@ -16,6 +16,7 @@ import {Observable, tap} from 'rxjs';
 })
 export class StopPointListComponent implements OnInit {
   stopPoints: StopPoint[] = [];
+  private destroy$ = new Subject<void>(); // Для отписки
 
   constructor(
     private stopPointService: StopPointService,
@@ -24,6 +25,18 @@ export class StopPointListComponent implements OnInit {
 
   ngOnInit(): void {
     this.loadStopPoints().subscribe();
+
+    // Подписываемся на событие создания точки
+    this.stopPointDataService.createStopPoint$.pipe(
+      takeUntil(this.destroy$) // Отписываемся при уничтожении компонента
+    ).subscribe(coords => {
+      this.createStopPoint(coords); // Создаем точку
+    });
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next(); // Отписываемся от всех подписок
+    this.destroy$.complete();
   }
 
 
@@ -32,8 +45,7 @@ export class StopPointListComponent implements OnInit {
     return this.stopPointService.getAllStopPoints().pipe(
       tap((data: StopPoint[]) => {
         this.stopPoints = data;
-        console.log(data);
-        this.stopPointDataService.setStopPoints(data);
+        this.stopPointDataService.setStopPoints(data); // Обновляем данные в сервисе
       })
     );
   }

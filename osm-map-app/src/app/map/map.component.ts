@@ -133,13 +133,9 @@ export class MapComponent implements AfterViewInit {
     if (button) {
       button.onclick = () => {
         console.log("Нажата кнопка сохранить остановку");
-        if (this.stopPointList) {
-        console.log("StopPointList доступен")
-        this.stopPointList.createStopPoint([lat, lng]);
-        popup.close(); // Закрываем попап после создания точки
-        }
-          else { console.log("Проблема с StopPointList")}
-        };
+        this.stopPointDataService.requestCreateStopPoint([lat, lng]); // Используем сервис
+        popup.close(); // Закрываем попап
+      };
 
     }
   }

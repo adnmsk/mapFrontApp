@@ -1,15 +1,16 @@
 import { Injectable } from '@angular/core';
-import { BehaviorSubject } from 'rxjs';
+import {BehaviorSubject, Subject} from 'rxjs';
 import { StopPoint } from '../entity/transport/stoppoint/stoppoint';
 import L, {LatLngExpression} from 'leaflet';
 import {StopPointService} from './stoppoint.service';
 
-@Injectable({
-  providedIn: 'root'
-})
+@Injectable({ providedIn: 'root' })
 export class StopPointDataService {
   private stopPointsSource = new BehaviorSubject<StopPoint[]>([]);
   stopPoints$ = this.stopPointsSource.asObservable(); // Общедоступный поток данных
+
+  private createStopPointSource = new Subject<L.LatLngExpression>();
+  createStopPoint$ = this.createStopPointSource.asObservable(); // Поток для создания точки
 
   constructor(private stopPointService: StopPointService) {}
 
@@ -19,10 +20,11 @@ export class StopPointDataService {
 
   getStopPoints(): StopPoint[] {
     console.log("StopPoints List loaded", this.stopPointsSource.pipe());
-    return this.stopPointsSource.getValue();// Получаем текущие данные
+    return this.stopPointsSource.getValue(); // Получаем текущие данные
   }
 
-
-
-
+  // Метод для создания новой точки
+  requestCreateStopPoint(coords: L.LatLngExpression): void {
+    this.createStopPointSource.next(coords); // Отправляем координаты новой точки
+  }
 }
