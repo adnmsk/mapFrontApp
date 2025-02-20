@@ -150,9 +150,9 @@ export class MapComponent implements AfterViewInit {
 
 
   private loadMarkers(): void {
-    if (!this.map || !this.stopPointList) return; //
+    if (!this.map ) return; //
 
-    const stopPoints = this.stopPointList.stopPoints || []; // Получаем список точек
+    const stopPoints = this.stopPointDataService.getStopPoints() || []; // Получаем список точек
 
     // Очищаем старые маркеры
     this.map.eachLayer(layer => {
