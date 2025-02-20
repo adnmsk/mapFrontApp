@@ -4,6 +4,7 @@ import { StopPoint } from './stoppoint';
 import { StopPointService } from '../../../service/stoppoint.service';
 import {StopPointDataService} from '../../../service/stop-point-data.service';
 import L, {latLng} from 'leaflet';
+import {Observable, tap} from 'rxjs';
 
 
 @Component({
@@ -22,21 +23,20 @@ export class StopPointListComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    this.loadStopPoints();
-
-
+    this.loadStopPoints().subscribe();
   }
 
 
 
-  loadStopPoints(): void {
-    this.stopPointService.getAllStopPoints().subscribe(data => {
-      this.stopPoints = data;
-      console.log(data);
-      this.stopPointDataService.setStopPoints(data);
-    });
+  loadStopPoints(): Observable<StopPoint[]> {
+    return this.stopPointService.getAllStopPoints().pipe(
+      tap((data: StopPoint[]) => {
+        this.stopPoints = data;
+        console.log(data);
+        this.stopPointDataService.setStopPoints(data);
+      })
+    );
   }
-
 
   public createStopPoint(coords: L.LatLngExpression): void {
     const latLng = L.latLng(coords); // Преобразуем в L.LatLng
@@ -59,7 +59,7 @@ export class StopPointListComponent implements OnInit {
 
     this.stopPointService.createStopPoint(newStopPoint).subscribe(
       () => {
-        this.loadStopPoints(); // Обновляем список точек после создания
+        this.loadStopPoints().subscribe(); // Обновляем список точек после создания
       },
       error => {
         console.error('Ошибка при создании точки:', error);
@@ -90,7 +90,7 @@ export class StopPointListComponent implements OnInit {
         active: true
       },
       number: Math.floor(Math.random() * 10),
-      bearing: Math.floor(Math.random() * 360),
+      bearing:1,
       point: {
         y: 51.5 + Math.random() * 0.1, // Случайная широта
         x: -0.09 - Math.random() * 0.1 // Случайная долгота
@@ -99,7 +99,7 @@ export class StopPointListComponent implements OnInit {
 
     this.stopPointService.createStopPoint(randomStopPoint).subscribe(
       () => {
-        this.loadStopPoints(); // Обновляем список точек после создания
+        this.loadStopPoints().subscribe(); // Обновляем список точек после создания
       },
       error => {
         console.error('Ошибка при создании случайной точки:', error);

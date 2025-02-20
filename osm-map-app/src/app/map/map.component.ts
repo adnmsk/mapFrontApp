@@ -1,4 +1,13 @@
-import {Component, AfterViewInit, Output, EventEmitter, Inject, PLATFORM_ID, ViewChild} from '@angular/core';
+import {
+  Component,
+  AfterViewInit,
+  Output,
+  EventEmitter,
+  Inject,
+  PLATFORM_ID,
+  ViewChild,
+  ChangeDetectorRef
+} from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
 import L, {
   Bounds,
@@ -23,10 +32,13 @@ import {StopPointListComponent} from '../entity/transport/stoppoint/stoppointlis
 @Component({
   selector: 'app-map',
   templateUrl: './map.component.html',
+  imports: [ ],
   styleUrls: ['./map.component.css']
 })
 export class MapComponent implements AfterViewInit {
-  @Output() createStopPoint = new EventEmitter<L.LatLngExpression>(); // Событие для создания точки
+
+
+
   private map: L.Map | null = null;
   private stopPoints: any[] = []; // Массив StopPoint
 
@@ -36,15 +48,19 @@ export class MapComponent implements AfterViewInit {
   constructor(
     @Inject(PLATFORM_ID) private platformId: string,
     private stopPointDataService: StopPointDataService, // Инъектируем сервис
+    private cdr: ChangeDetectorRef
   ) { }
 
 
 
   async ngAfterViewInit(): Promise<void> {
+    console.log("StopPointList:", this.stopPointList); // Проверьте, что компонент доступен
     if (isPlatformBrowser(this.platformId)) { // Проверяем флаг
+      this.cdr.detectChanges(); // Принудительно обновляем представление
       const leaflet = await this.importLeaflet();
       this.initializeMap(leaflet);
-      await this.addMarkers();// Добавляем маркеры на карту
+      this.loadMarkers();// Добавляем маркеры на карту
+      this.subscribeToStopPoints(); // Подписываемся на изменения точек
 
     }
   }
@@ -82,6 +98,7 @@ export class MapComponent implements AfterViewInit {
         event.originalEvent.preventDefault(); // Отключаем стандартное контекстное меню
         const coords: LatLngExpression = [event.latlng.lat, event.latlng.lng];
         this.showContextMenu(event.containerPoint, coords);
+        console.log('Context menu caught...');
       });
     } catch (error) {
       console.error('Error initializing map:', error);
@@ -90,23 +107,42 @@ export class MapComponent implements AfterViewInit {
 
 
   private showContextMenu(position: L.Point, coords: LatLngExpression): void {
+
     if (!this.map) return;
 
     const lat = (coords as [number, number])[0];
     const lng = (coords as [number, number])[1];
 
+    // Создаем HTML-код для попапа
     const popupContent = `
-      <div style="padding: 10px; background-color: white; border: 1px solid #ccc;">
-        <button style="padding: 5px 10px; cursor: pointer;" onclick="confirmCreatePoint(${lat}, ${lng})">
-          Создать новую точку
-        </button>
-      </div>
-    `;
+    <div style="padding: 10px; background-color: white; border: 1px solid #ccc;">
+      <button style="padding: 5px 10px; cursor: pointer;" id="createPointButton">
+        Создать новую точку
+      </button>
+    </div>
+  `;
 
-    this.map.openPopup(popupContent, this.map.containerPointToLatLng(position));
+    // Создаем попап и добавляем его на карту
+    const popup = L.popup()
+      .setLatLng(this.map.containerPointToLatLng(position))
+      .setContent(popupContent)
+      .openOn(this.map);
+
+    // Находим кнопку внутри попапа и добавляем обработчик события
+    const button = document.getElementById('createPointButton');
+    if (button) {
+      button.onclick = () => {
+        console.log("Нажата кнопка сохранить остановку");
+        if (this.stopPointList) {
+        console.log("StopPointList доступен")
+        this.stopPointList.createStopPoint([lat, lng]);
+        popup.close(); // Закрываем попап после создания точки
+        }
+          else { console.log("Проблема с StopPointList")}
+        };
+
+    }
   }
-
-
 
   // Глобальная функция для подтверждения создания точки
   confirmCreatePoint(lat: number, lng: number): void {
@@ -116,50 +152,23 @@ export class MapComponent implements AfterViewInit {
     }
   }
 
-  private loadMarkers(): void {
-    const stopPoints = this.stopPointList.stopPoints; // Получаем список точек из StopPointListComponent
-    if (!this.map || !this.stopPointList) return;
-    if (this.map) {
-      this.map.eachLayer(layer => {
-        if (layer instanceof L.Marker || layer instanceof L.CircleMarker) {
-          // @ts-ignore
-          this.map.removeLayer(layer); // Очищаем старые маркеры
-        }
-      });
-    }
 
+  private loadMarkers(): void {
+    if (!this.map || !this.stopPointList) return; //
+
+    const stopPoints = this.stopPointList.stopPoints || []; // Получаем список точек
+
+    // Очищаем старые маркеры
+    this.map.eachLayer(layer => {
+      if (layer instanceof L.Marker || layer instanceof L.CircleMarker) {
+        this.map?.removeLayer(layer);
+      }
+    });
+
+    // Добавляем новые маркеры
     stopPoints.forEach((stopPoint, index) => {
       const coords: LatLngExpression = [stopPoint.point.y, stopPoint.point.x];
 
-
-
-      L.circleMarker(coords, {
-        radius: 8,
-        fillColor: 'green',
-        color: 'darkgreen',
-        weight: 2,
-        opacity: 1,
-        fillOpacity: 0.8
-      })
-        // @ts-ignore
-        .addTo(this.map)
-        .bindPopup(`Точка остановки ${index + 1}: ${stopPoint.persistent.name}`)
-        .openPopup();
-    });
-  }
-
-
-
-  // @ts-ignore
-  private async addMarkers(): Promise<typeof L> {
-    console.log("Loaded to create marks", this.stopPoints.length)
-    this.stopPoints.forEach((stopPoint: {
-      point: { y: number[]; x: number };
-      persistent: { name: any; id: any; description: any };
-    }, index: number) => {
-      const coords = [stopPoint.point.y, stopPoint.point.x];
-
-      // @ts-ignore
       L.circleMarker(coords, {
         radius: 8,
         fillColor: 'green',
@@ -169,14 +178,23 @@ export class MapComponent implements AfterViewInit {
         fillOpacity: 0.8
       })
         .addTo(this.map!)
-        .bindPopup(`StopPoint ${index + 1}: ${stopPoint.persistent.name} ${stopPoint.persistent.description} ${stopPoint.persistent.id}`)
+        .bindPopup(`Точка остановки ${index + 1}: ${stopPoint.persistent.name}`)
         .openPopup();
     });
   }
 
 
+  private subscribeToStopPoints(): void {
+    this.stopPointDataService.stopPoints$.subscribe(() => {
+      this.loadMarkers(); // Перерисовываем маркеры при изменении данных
+    });
+  }
+
 
 }
+
+
+
 
 
 

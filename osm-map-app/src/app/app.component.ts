@@ -11,7 +11,7 @@ import {StopPointListComponent} from './entity/transport/stoppoint/stoppointlist
 export class AppComponent {
   title = 'osm-map-app';
 
-  @ViewChild(StopPointListComponent) stopPointListComponent: StopPointListComponent | undefined; // Ссылка на MapComponent
+  @ViewChild(StopPointListComponent) stopPointListComponent: StopPointListComponent | undefined;
 
   addRandomPoint(): void {
     if (this.stopPointListComponent) {
@@ -19,6 +19,6 @@ export class AppComponent {
     }
   }
 
-  
+
 
 }
