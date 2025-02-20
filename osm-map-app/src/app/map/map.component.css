@@ -11,4 +11,11 @@
     border: none;
   }
 
+  #map {
+    width: 100%;
+    height: 100vh; /* или фиксированную высоту */
+    position: relative;
+    overflow: hidden;
+  }
+
 }

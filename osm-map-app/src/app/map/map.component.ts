@@ -97,21 +97,42 @@ export class MapComponent implements AfterViewInit, OnDestroy {
       this.map.remove(); // Удаляем существующую карту
       return;
     }
-
     try {
       console.log('Initializing map...');
-      this.map = leaflet.map('map').setView([51.505, -0.09], 13);
+      this.map = leaflet.map('map', {
+        preferCanvas: true, // Использование канваса для улучшения производительности
+        zoomAnimation: false, // Отключение анимации зума
+        fadeAnimation: false, // Отключение анимации появления тайлов
+        markerZoomAnimation: false // Отключение анимации маркеров при зуме
+      }).setView([51.505, -0.09], 13);
 
+      // Добавление слоя тайлов
       leaflet.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         maxZoom: 18,
+        detectRetina: true, // Оптимизация для Retina-дисплеев
         attribution: '© OpenStreetMap contributors'
       }).addTo(this.map);
 
+      // Обработчик контекстного меню
       this.map.on('contextmenu', (event: L.LeafletMouseEvent) => {
         event.originalEvent.preventDefault(); // Отключаем стандартное контекстное меню
         const coords: LatLngExpression = [event.latlng.lat, event.latlng.lng];
         this.showContextMenu(event.containerPoint, coords);
         console.log('Context menu caught...');
+      });
+
+      // Принудительная перерисовка карты при изменении размера или после загрузки
+      window.addEventListener('resize', () => {
+        if (this.map) {
+          this.map.invalidateSize();
+        }
+      });
+
+      // Дополнительная оптимизация: принудительная перерисовка карты при движении
+      this.map.on('moveend', () => {
+        if (this.map) {
+          this.map.invalidateSize(false); // Перерисовка без анимации
+        }
       });
     } catch (error) {
       console.error('Error initializing map:', error);
