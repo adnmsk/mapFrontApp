@@ -29,6 +29,7 @@ import {StopPointListComponent} from '../entity/transport/stoppoint/stoppointlis
 import {catchError, forkJoin, of, Subject, takeUntil, tap} from 'rxjs';
 import {StopService} from '../service/stop.service';
 import {StopDataService} from '../service/stop-data.service';
+import {Stop} from '../entity/transport/stop/stop';
 
 
 
@@ -83,6 +84,12 @@ export class MapComponent implements AfterViewInit, OnDestroy {
       ).subscribe(() => {
         this.loadPolygons(); // Обновляем полигоны
       });
+      this.stopDataService.editStop$.pipe(
+        takeUntil(this.destroy$)
+      ).subscribe(updatedStop => {
+        console.log('Stop обновлен:', updatedStop);
+        this.loadPolygons(); // Перерисовываем полигоны
+      });
     }
   }
 
@@ -131,9 +138,29 @@ export class MapComponent implements AfterViewInit, OnDestroy {
       // Обработчик контекстного меню
       this.map.on('contextmenu', (event: L.LeafletMouseEvent) => {
         event.originalEvent.preventDefault(); // Отключаем стандартное контекстное меню
-        const coords: LatLngExpression = [event.latlng.lat, event.latlng.lng];
-        this.showContextMenu(event.containerPoint, coords);
-        console.log('Context menu caught...');
+
+        // Проверяем, было ли нажатие на полигоне
+        const clickedPolygon = this.stopPolygons.find(polygon => {
+          const bounds = polygon.getBounds();
+          return bounds.contains(event.latlng);
+        });
+
+        if (clickedPolygon) {
+          // Если нажатие на полигоне, находим соответствующий Stop
+          const stop = this.stopDataService.getStops().find(stop => {
+            const polygonCoords = this.stopPolygons
+              .find(p => p === clickedPolygon)
+              ?.getLatLngs() as LatLngExpression[];
+            return polygonCoords && polygonCoords.length > 0;
+          });
+
+          if (stop) {
+            this.showStopContextMenu(event.latlng, stop); // Открываем контекстное меню для Stop
+          }
+        } else {
+          // Если нажатие вне полигона, показываем попап для создания новой точки
+          this.showContextMenu(event.containerPoint, event.latlng);
+        }
       });
 
       // Принудительная перерисовка карты при изменении размера или после загрузки
@@ -320,9 +347,9 @@ export class MapComponent implements AfterViewInit, OnDestroy {
   }
 
   private loadPolygons(): void {
-    if (!this.map || !this.showStops) return; // Не добавляем полигоны, если showStops равно false
+    if (!this.map || !this.showStops) return;
 
-    const stops = this.stopDataService.getStops(); // Получаем список остановок
+    const stops = this.stopDataService.getStops();
 
     // Очищаем старые полигоны
     this.stopPolygons.forEach(polygon => this.map?.removeLayer(polygon));
@@ -330,7 +357,7 @@ export class MapComponent implements AfterViewInit, OnDestroy {
 
     // Создаем массив запросов для получения полигонов
     const requests = stops
-      .filter(stop => stop.persistent.id !== undefined) // Фильтруем остановки с определенным ID
+      .filter(stop => stop.persistent.id !== undefined)
       .map(stop =>
         this.stopService.getPolygon(stop.persistent.id!).pipe(
           tap(polygonCoords => {
@@ -338,7 +365,7 @@ export class MapComponent implements AfterViewInit, OnDestroy {
           }),
           catchError(error => {
             console.error(`Ошибка при запросе полигона для Stop ID ${stop.persistent.id}:`, error);
-            return of(null); // Возвращаем null в случае ошибки
+            return of(null);
           })
         )
       );
@@ -348,13 +375,11 @@ export class MapComponent implements AfterViewInit, OnDestroy {
       results.forEach((polygonCoords, index) => {
         const stop = stops[index];
 
-        // Если координаты не получены (ошибка или пустой ответ), пропускаем отрисовку
         if (!polygonCoords || polygonCoords.length === 0) {
           console.warn(`Для Stop ID ${stop.persistent.id} полигон не будет отрисован (нет данных или ошибка).`);
           return;
         }
 
-        // Преобразуем координаты в формат, подходящий для Leaflet
         const latLngs = polygonCoords.map((coord: number[]) => [coord[1], coord[0]] as LatLngExpression);
 
         // Создаем полигон и добавляем его на карту
@@ -367,9 +392,66 @@ export class MapComponent implements AfterViewInit, OnDestroy {
         // Сохраняем полигон в массив для дальнейшего управления
         this.stopPolygons.push(polygon);
 
+        // Обработчик события ПКМ на полигоне
+        polygon.on('contextmenu', (event: L.LeafletMouseEvent) => {
+          event.originalEvent.preventDefault(); // Отключаем стандартное контекстное меню
+          this.showStopContextMenu(event.latlng, stop); // Открываем контекстное меню для Stop
+        });
+
         console.log(`Полигон для Stop ID ${stop.persistent.id} успешно отрисован.`);
       });
     });
+  }
+
+  private showStopContextMenu(latlng: LatLngExpression, stop: Stop): void {
+    if (!this.map) return;
+
+    // Создаем HTML-код для попапа
+    const popupContent = `
+    <div style="padding: 10px; background-color: white; border: 1px solid #ccc;">
+      <h3>Редактирование Stop</h3>
+      <form id="stopEditForm">
+        <label for="stopName">Название:</label>
+        <input type="text" id="stopName" value="${stop.persistent.name}" style="width: 100%; margin-bottom: 10px;">
+        <label for="stopAddress">Описание:</label>
+        <textarea id="stopAddress" style="width: 100%; margin-bottom: 10px;">${stop.address || ''}</textarea>
+        <button type="button" id="saveStopButton" style="padding: 5px 10px; cursor: pointer; margin-right: 5px;">Сохранить</button>
+        <button type="button" id="cancelStopButton" style="padding: 5px 10px; cursor: pointer;">Отмена</button>
+      </form>
+    </div>
+  `;
+
+    // Создаем попап и добавляем его на карту
+    const popup = L.popup()
+      .setLatLng(latlng)
+      .setContent(popupContent)
+      .openOn(this.map);
+
+    // Обработчик для кнопки "Сохранить"
+    const saveButton = document.getElementById('saveStopButton');
+    if (saveButton) {
+      saveButton.onclick = () => {
+        const stopName = (document.getElementById('stopName') as HTMLInputElement).value;
+        const stopAddress = (document.getElementById('stopAddress') as HTMLTextAreaElement).value;
+
+        // Обновляем данные Stop
+        stop.persistent.name = stopName;
+        stop.address = stopAddress;
+
+        // Вызываем метод для обновления Stop на сервере
+        this.stopDataService.requestEditStop(stop);
+
+        popup.close(); // Закрываем попап
+      };
+    }
+
+    // Обработчик для кнопки "Отмена"
+    const cancelButton = document.getElementById('cancelStopButton');
+    if (cancelButton) {
+      cancelButton.onclick = () => {
+        popup.close(); // Закрываем попап
+      };
+    }
   }
 
   public toggleStopsVisibility(visible: boolean): void {
