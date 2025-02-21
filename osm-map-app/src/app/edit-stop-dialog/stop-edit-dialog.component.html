@@ -1,0 +1,33 @@
+<h2 mat-dialog-title>{{ data.stop.persistent.id ? 'Редактировать остановку' : 'Создать остановку' }}</h2>
+<mat-dialog-content>
+  <form [formGroup]="editForm">
+    <!-- Поле "Название" -->
+    <mat-form-field appearance="fill">
+      <mat-label>Название</mat-label>
+      <input matInput formControlName="name" required />
+      <mat-error *ngIf="editForm.get('name')?.hasError('required')">
+        Название обязательно.
+      </mat-error>
+    </mat-form-field>
+
+    <!-- Поле "Описание" -->
+    <mat-form-field appearance="fill">
+      <mat-label>Описание</mat-label>
+      <textarea matInput formControlName="description" required></textarea>
+      <mat-error *ngIf="editForm.get('description')?.hasError('required')">
+        Описание обязательно.
+      </mat-error>
+    </mat-form-field>
+
+    <!-- Поле "Сокращение" -->
+    <mat-form-field appearance="fill">
+      <mat-label>Сокращение</mat-label>
+      <input matInput formControlName="abbreviation" required />
+      <mat-error *ngIf="editForm.get('abbreviation')?.hasError('required')">
+        Сокращение обязательно.
+      </mat-error>
+    </mat-form-field>
+
+    <!-- Поле "Адрес" -->
+    <mat-form-field appearance="fill">
+      <mat-label>Адрес</mat-label>

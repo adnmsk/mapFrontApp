@@ -1,5 +1,6 @@
 import {Point} from '../point'
 import {LocalName} from '../localname';
+import {Persistent} from '../persistent';
 
 export class StopPoint {
   persistent: Persistent = new Persistent();
@@ -14,19 +15,7 @@ export class StopPoint {
     // @ts-ignore
     this.point = new Point(data.point);
   }
-}
 
-export class Persistent {
-  id?: number;
-  name?: string;
-  description?: string;
-  creator: string = '';
-  locales: LocalName[] = [];
-  active: boolean = true;
-
-  constructor(data: Partial<Persistent> = {}) {
-    Object.assign(this, data);
-  }
 
 
 }

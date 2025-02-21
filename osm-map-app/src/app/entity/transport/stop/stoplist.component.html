@@ -1,0 +1,74 @@
+<h2>Список остановок</h2>
+
+<!-- Таблица с остановками -->
+<div *ngIf="stops.length > 0; else noData">
+  <table>
+    <thead>
+    <tr>
+      <th>ID</th>
+      <th>Название</th>
+      <th>Сокращение</th>
+      <th>Адрес</th>
+      <th>Депо</th>
+      <th>Действия</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr *ngFor="let stop of stops">
+      <td>{{ stop.persistent.id }}</td>
+      <td>{{ stop.persistent.name }}</td>
+      <td>{{ stop.abbreviation }}</td>
+      <td>{{ stop.address }}</td>
+      <td>{{ stop.depot ? 'Да' : 'Нет' }}</td>
+      <td>
+        <button (click)="openEditDialog(stop)">Редактировать</button>
+        <button (click)="deleteStop(stop.persistent.id!)">Удалить</button>
+        <button (click)="showStopPoints(stop)">Точки остановки</button>
+      </td>
+    </tr>
+    </tbody>
+  </table>
+</div>
+<ng-template #noData>
+  <p>Остановки отсутствуют.</p>
+</ng-template>
+
+<!-- Модальное окно для отображения ассоциированных StopPoint -->
+<div *ngIf="selectedStop" class="modal-background">
+  <div class="modal-content">
+    <h2>Точки остановки для {{ selectedStop.persistent.name }}</h2>
+    <table *ngIf="stopPoints.length > 0; else noStopPoints">
+      <thead>
+      <tr>
+        <th>ID</th>
+        <th>Название</th>
+        <th>Номер</th>
+        <th>Описание</th>
+        <th>Координаты</th>
+        <th>Действия</th>
+      </tr>
+      </thead>
+      <tbody>
+      <tr *ngFor="let stopPoint of stopPoints">
+        <td>{{ stopPoint.persistent.id }}</td>
+        <td>{{ stopPoint.persistent.name }}</td>
+        <td>{{ stopPoint.number }}</td>
+        <td>{{ stopPoint.persistent.description }}</td>
+        <td>{{ stopPoint.point.y }}, {{ stopPoint.point.x }}</td>
+        <td>
+          <button *ngIf="!isAssociated(stopPoint); else unlinkButton" (click)="linkToStop(stopPoint)">
+            Привязать
+          </button>
+          <ng-template #unlinkButton>
+            <button (click)="unlinkFromStop(stopPoint)">Отвязать</button>
+          </ng-template>
+        </td>
+      </tr>
+      </tbody>
+    </table>
+    <ng-template #noStopPoints>
+      <p>Ассоциированные точки остановки отсутствуют.</p>
+    </ng-template>
+    <button (click)="closeStopPointsModal()">Закрыть</button>
+  </div>
+</div>
