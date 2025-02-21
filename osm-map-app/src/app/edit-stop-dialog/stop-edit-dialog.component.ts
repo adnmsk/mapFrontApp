@@ -7,6 +7,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import {Stop} from '../entity/transport/stop/stop';
+import {MatCheckbox} from '@angular/material/checkbox';
 
 @Component({
   selector: 'app-stop-edit-dialog',
@@ -20,6 +21,7 @@ import {Stop} from '../entity/transport/stop/stop';
     MatButtonModule,
     MatFormFieldModule,
     ReactiveFormsModule,
+    MatCheckbox,
   ],
 })
 export class StopEditDialogComponent {
