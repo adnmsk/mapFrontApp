@@ -51,4 +51,9 @@ export class StopService {
   fetchStopPoints(stopId: number): Observable<StopPoint[]> {
     return this.http.get<StopPoint[]>(`${this.apiUrl}/fetch-stop-points/${stopId}`);
   }
+
+  // Получить координаты Эллипса для Stop по ID Stop
+  getPolygon(stopId: number): Observable<number[][]> {
+    return this.http.get<number[][]>(`${this.apiUrl}/get-ellipsoid/${stopId}`);
+  }
 }

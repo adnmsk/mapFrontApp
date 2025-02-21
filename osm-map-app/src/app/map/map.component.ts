@@ -27,6 +27,8 @@ import {StopPointService} from '../service/stoppoint.service';
 import {StopPoint} from '../entity/transport/stoppoint/stoppoint';
 import {StopPointListComponent} from '../entity/transport/stoppoint/stoppointlist.component';
 import {Subject, takeUntil} from 'rxjs';
+import {StopService} from '../service/stop.service';
+import {StopDataService} from '../service/stop-data.service';
 
 
 
@@ -43,6 +45,9 @@ export class MapComponent implements AfterViewInit, OnDestroy {
 
   private map: L.Map | null = null;
   private stopPoints: any[] = []; // Массив StopPoint
+  private stopPolygons: L.Polygon[] = []; // Массив полигонов для Stop
+  protected showStops = true; // Флаг для отображения Stop
+  protected showStopPoints = true; // Флаг для отображения StopPoint
   private destroy$ = new Subject<void>(); // Для отписки
 
   @ViewChild(StopPointListComponent, { static: false }) stopPointList!: StopPointListComponent;
@@ -51,6 +56,8 @@ export class MapComponent implements AfterViewInit, OnDestroy {
   constructor(
     @Inject(PLATFORM_ID) private platformId: string,
     private stopPointDataService: StopPointDataService, // Инъектируем сервис
+    private stopService: StopService,
+    private stopDataService: StopDataService,
     private cdr: ChangeDetectorRef
   ) { }
 
@@ -70,7 +77,72 @@ export class MapComponent implements AfterViewInit, OnDestroy {
       ).subscribe(() => {
         this.loadMarkers(); // Обновляем маркеры
       });
+      this.stopDataService.refreshObject$.pipe(
+        takeUntil(this.destroy$)
+      ).subscribe(() => {
+        this.loadPolygons();
+      });
     }
+  }
+
+  private loadPolygons(): void {
+    if (!this.map) return;
+
+    // Очищаем старые полигоны
+    this.stopPolygons.forEach(polygon => this.map?.removeLayer(polygon));
+    this.stopPolygons = [];
+
+    if (!this.showStops) return;
+
+    const stops = this.stopDataService.getStops();
+    stops.forEach(stop => {
+      // Проверяем, что stop.persistent.id существует и является числом
+      if (stop.persistent.id !== undefined) {
+        this.stopService.getPolygon(stop.persistent.id).subscribe(polygonCoords => {
+          const latLngs = polygonCoords.map(coord => [coord[1], coord[0]] as LatLngExpression);
+          const polygon = L.polygon(latLngs, {
+            color: 'orange',
+            fillColor: '#ffa500',
+            fillOpacity: 0.5
+          }).addTo(this.map!);
+          this.stopPolygons.push(polygon);
+        });
+      } else {
+        console.warn('Stop ID is undefined for stop:', stop);
+      }
+    });
+  }
+
+  public toggleStopsVisibility(visible: boolean): void {
+    this.showStops = visible;
+    this.stopPolygons.forEach(polygon => {
+      if (visible) {
+        polygon.addTo(this.map!);
+      } else {
+        polygon.remove();
+      }
+    });
+  }
+
+  public toggleStopPointsVisibility(visible: boolean): void {
+    this.showStopPoints = visible;
+
+    if (!visible) {
+      // Если флаг false, удаляем все маркеры
+      this.clearMarkers();
+    } else {
+      // Если флаг true, загружаем маркеры
+      this.loadMarkers();
+    }
+  }
+
+  // Добавьте методы для управления видимостью через UI
+  toggleStops(): void {
+    this.toggleStopsVisibility(!this.showStops);
+  }
+
+  toggleStopPoints(): void {
+    this.toggleStopPointsVisibility(!this.showStopPoints);
   }
 
   ngOnDestroy(): void {
@@ -139,6 +211,17 @@ export class MapComponent implements AfterViewInit, OnDestroy {
     }
   }
 
+  private clearMarkers(): void {
+    if (!this.map) return;
+
+    // Удаляем все маркеры с карты
+    this.map.eachLayer(layer => {
+      if (layer instanceof L.Marker || layer instanceof L.CircleMarker) {
+        this.map?.removeLayer(layer);
+      }
+    });
+  }
+
 
   private showContextMenu(position: L.Point, coords: LatLngExpression): void {
 
@@ -185,16 +268,13 @@ export class MapComponent implements AfterViewInit, OnDestroy {
 
 
   private loadMarkers(): void {
-    if (!this.map) return;
+    if (!this.map || !this.showStopPoints) return; // Добавлена проверка на showStopPoints
 
     const stopPoints = this.stopPointDataService.getStopPoints() || []; // Получаем список точек
 
     // Очищаем старые маркеры
-    this.map.eachLayer(layer => {
-      if (layer instanceof L.Marker || layer instanceof L.CircleMarker) {
-        this.map?.removeLayer(layer);
-      }
-    });
+
+    this.clearMarkers();
 
     // Добавляем новые маркеры
     stopPoints.forEach((stopPoint, index) => {
