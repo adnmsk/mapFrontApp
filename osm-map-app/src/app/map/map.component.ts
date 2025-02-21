@@ -26,7 +26,7 @@ import {StopPointDataService} from '../service/stop-point-data.service';
 import {StopPointService} from '../service/stoppoint.service';
 import {StopPoint} from '../entity/transport/stoppoint/stoppoint';
 import {StopPointListComponent} from '../entity/transport/stoppoint/stoppointlist.component';
-import {Subject, takeUntil} from 'rxjs';
+import {catchError, forkJoin, of, Subject, takeUntil, tap} from 'rxjs';
 import {StopService} from '../service/stop.service';
 import {StopDataService} from '../service/stop-data.service';
 
@@ -69,7 +69,8 @@ export class MapComponent implements AfterViewInit, OnDestroy {
       this.cdr.detectChanges(); // Принудительно обновляем представление
       const leaflet = await this.importLeaflet();
       this.initializeMap(leaflet);
-      this.loadMarkers();// Добавляем маркеры на карту
+      this.loadMarkers(); // Добавляем маркеры на карту
+      this.loadPolygons(); // Добавляем полигоны на карту
       this.subscribeToStopPoints(); // Подписываемся на изменения точек
       // Подписываемся на событие обновления карты
       this.stopPointDataService.refreshObject$.pipe(
@@ -80,70 +81,12 @@ export class MapComponent implements AfterViewInit, OnDestroy {
       this.stopDataService.refreshObject$.pipe(
         takeUntil(this.destroy$)
       ).subscribe(() => {
-        this.loadPolygons();
+        this.loadPolygons(); // Обновляем полигоны
       });
     }
   }
 
-  private loadPolygons(): void {
-    if (!this.map) return;
 
-    // Очищаем старые полигоны
-    this.stopPolygons.forEach(polygon => this.map?.removeLayer(polygon));
-    this.stopPolygons = [];
-
-    if (!this.showStops) return;
-
-    const stops = this.stopDataService.getStops();
-    stops.forEach(stop => {
-      // Проверяем, что stop.persistent.id существует и является числом
-      if (stop.persistent.id !== undefined) {
-        this.stopService.getPolygon(stop.persistent.id).subscribe(polygonCoords => {
-          const latLngs = polygonCoords.map(coord => [coord[1], coord[0]] as LatLngExpression);
-          const polygon = L.polygon(latLngs, {
-            color: 'orange',
-            fillColor: '#ffa500',
-            fillOpacity: 0.5
-          }).addTo(this.map!);
-          this.stopPolygons.push(polygon);
-        });
-      } else {
-        console.warn('Stop ID is undefined for stop:', stop);
-      }
-    });
-  }
-
-  public toggleStopsVisibility(visible: boolean): void {
-    this.showStops = visible;
-    this.stopPolygons.forEach(polygon => {
-      if (visible) {
-        polygon.addTo(this.map!);
-      } else {
-        polygon.remove();
-      }
-    });
-  }
-
-  public toggleStopPointsVisibility(visible: boolean): void {
-    this.showStopPoints = visible;
-
-    if (!visible) {
-      // Если флаг false, удаляем все маркеры
-      this.clearMarkers();
-    } else {
-      // Если флаг true, загружаем маркеры
-      this.loadMarkers();
-    }
-  }
-
-  // Добавьте методы для управления видимостью через UI
-  toggleStops(): void {
-    this.toggleStopsVisibility(!this.showStops);
-  }
-
-  toggleStopPoints(): void {
-    this.toggleStopPointsVisibility(!this.showStopPoints);
-  }
 
   ngOnDestroy(): void {
     this.destroy$.next(); // Отписываемся от всех подписок
@@ -374,6 +317,93 @@ export class MapComponent implements AfterViewInit, OnDestroy {
     this.stopPointDataService.stopPoints$.subscribe(() => {
       this.loadMarkers(); // Перерисовываем маркеры при изменении данных
     });
+  }
+
+  private loadPolygons(): void {
+    if (!this.map || !this.showStops) return; // Не добавляем полигоны, если showStops равно false
+
+    const stops = this.stopDataService.getStops(); // Получаем список остановок
+
+    // Очищаем старые полигоны
+    this.stopPolygons.forEach(polygon => this.map?.removeLayer(polygon));
+    this.stopPolygons = [];
+
+    // Создаем массив запросов для получения полигонов
+    const requests = stops
+      .filter(stop => stop.persistent.id !== undefined) // Фильтруем остановки с определенным ID
+      .map(stop =>
+        this.stopService.getPolygon(stop.persistent.id!).pipe(
+          tap(polygonCoords => {
+            console.log(`Запрос для Stop ID ${stop.persistent.id} успешен. Получено точек: ${polygonCoords.length}`);
+          }),
+          catchError(error => {
+            console.error(`Ошибка при запросе полигона для Stop ID ${stop.persistent.id}:`, error);
+            return of(null); // Возвращаем null в случае ошибки
+          })
+        )
+      );
+
+    // Выполняем все запросы параллельно
+    forkJoin(requests).subscribe(results => {
+      results.forEach((polygonCoords, index) => {
+        const stop = stops[index];
+
+        // Если координаты не получены (ошибка или пустой ответ), пропускаем отрисовку
+        if (!polygonCoords || polygonCoords.length === 0) {
+          console.warn(`Для Stop ID ${stop.persistent.id} полигон не будет отрисован (нет данных или ошибка).`);
+          return;
+        }
+
+        // Преобразуем координаты в формат, подходящий для Leaflet
+        const latLngs = polygonCoords.map((coord: number[]) => [coord[1], coord[0]] as LatLngExpression);
+
+        // Создаем полигон и добавляем его на карту
+        const polygon = L.polygon(latLngs, {
+          color: 'orange',
+          fillColor: '#ffa500',
+          fillOpacity: 0.5
+        }).addTo(this.map!);
+
+        // Сохраняем полигон в массив для дальнейшего управления
+        this.stopPolygons.push(polygon);
+
+        console.log(`Полигон для Stop ID ${stop.persistent.id} успешно отрисован.`);
+      });
+    });
+  }
+
+  public toggleStopsVisibility(visible: boolean): void {
+    this.showStops = visible;
+
+    if (!visible) {
+      // Если флаг false, удаляем все полигоны
+      this.stopPolygons.forEach(polygon => this.map?.removeLayer(polygon));
+      this.stopPolygons = [];
+    } else {
+      // Если флаг true, загружаем полигоны
+      this.loadPolygons();
+    }
+  }
+
+  public toggleStopPointsVisibility(visible: boolean): void {
+    this.showStopPoints = visible;
+
+    if (!visible) {
+      // Если флаг false, удаляем все маркеры
+      this.clearMarkers();
+    } else {
+      // Если флаг true, загружаем маркеры
+      this.loadMarkers();
+    }
+  }
+
+  // Добавьте методы для управления видимостью через UI
+  toggleStops(): void {
+    this.toggleStopsVisibility(!this.showStops);
+  }
+
+  toggleStopPoints(): void {
+    this.toggleStopPointsVisibility(!this.showStopPoints);
   }
 
 
