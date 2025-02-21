@@ -1,7 +1,12 @@
 <h2>Список остановок</h2>
 
+<!-- Кнопка для создания остановки -->
+<button mat-raised-button color="primary" (click)="openCreateStopDialog()">
+  Создать остановку
+</button>
+
 <!-- Таблица с остановками -->
-<div *ngIf="stops.length > 0; else noData">
+<div *ngIf="stops.length > 0; else noData" class="container">
   <table>
     <thead>
     <tr>

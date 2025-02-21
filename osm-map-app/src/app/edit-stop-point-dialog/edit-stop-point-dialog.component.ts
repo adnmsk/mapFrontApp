@@ -30,8 +30,8 @@ export class EditStopPointDialogComponent {
     @Inject(MAT_DIALOG_DATA) public data: { stopPoint: StopPoint }
   ) {
     this.editForm = this.fb.group({
-      name: [data.stopPoint.persistent.name, Validators.required],
-      description: [data.stopPoint.persistent.description, Validators.required],
+      name: [data.stopPoint.persistent.name],
+      description: [data.stopPoint.persistent.description],
       bearing:[data.stopPoint.bearing, Validators.required],
       coordY:[data.stopPoint.point.y, Validators.required],
       coordX:[data.stopPoint.point.x, Validators.required],

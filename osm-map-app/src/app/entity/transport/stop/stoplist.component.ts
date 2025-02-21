@@ -9,6 +9,7 @@ import {Stop} from './stop';
 import {StopService} from '../../../service/stop.service';
 import {StopDataService} from '../../../service/stop-data.service';
 import {StopPointService} from '../../../service/stoppoint.service';
+import {CreateStopDialogComponent} from '../../../create-stop-dialog/create-stop-dialog.component';
 
 @Component({
   selector: 'app-stop-list',
@@ -51,6 +52,19 @@ export class StopListComponent implements OnInit, OnDestroy {
         this.stopDataService.setStops(stops);
       })
     );
+  }
+
+  // Открытие диалога создания остановки
+  openCreateStopDialog(): void {
+    const dialogRef = this.dialog.open(CreateStopDialogComponent, {
+      width: '500px',
+    });
+
+    dialogRef.afterClosed().subscribe((result: boolean) => {
+      if (result) {
+        this.loadStops().subscribe(); // Обновить список остановок
+      }
+    });
   }
 
   // Открытие диалога редактирования

@@ -1,0 +1,47 @@
+<!-- create-stop-dialog.component.html -->
+<h2 mat-dialog-title>Создание остановки</h2>
+<mat-dialog-content>
+  <form [formGroup]="createForm">
+    <!-- Поле "Название" -->
+    <mat-form-field>
+      <input matInput formControlName="name" placeholder="Название" style="font-size: 12px" />
+      <mat-error *ngIf="createForm.get('name')?.hasError('required')">
+        Название обязательно.
+      </mat-error>
+    </mat-form-field>
+
+    <!-- Поле "Адрес" -->
+    <mat-form-field>
+      <input matInput formControlName="address" placeholder="Адрес (мин 5 символов)" style="font-size: 12px" />
+      <mat-error *ngIf="createForm.get('address')?.hasError('required')">
+        Адрес обязателен.
+      </mat-error>
+      <mat-error *ngIf="createForm.get('address')?.hasError('minlength')">
+        Адрес должен быть не менее 5 символов.
+      </mat-error>
+    </mat-form-field>
+
+    <!-- Поле "Сокращение" -->
+    <mat-form-field>
+      <input matInput formControlName="abbreviation" placeholder="Abbr (Не более 8 символов)" style="font-size: 12px" />
+      <mat-error *ngIf="createForm.get('abbreviation')?.hasError('required')">
+        Сокращение обязательно.
+      </mat-error>
+      <mat-error *ngIf="createForm.get('abbreviation')?.hasError('maxlength')">
+        Сокращение должно быть не более 8 символов.
+      </mat-error>
+    </mat-form-field>
+
+    <!-- Поле "Description" -->
+    <mat-form-field>
+      <input matInput formControlName="description" placeholder="Описание" style="font-size: 12px" />
+    </mat-form-field>
+
+    <!-- Чекбокс "Депо" -->
+    <mat-checkbox formControlName="depot">Депо</mat-checkbox>
+  </form>
+</mat-dialog-content>
+<mat-dialog-actions align="end">
+  <button mat-button (click)="onCancel()">Отмена</button>
+  <button mat-raised-button color="primary" (click)="onCreate()">Создать</button>
+</mat-dialog-actions>

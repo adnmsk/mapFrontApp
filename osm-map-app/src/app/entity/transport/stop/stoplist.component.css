@@ -1,14 +1,23 @@
-/* stoplist.component.css */
+/* Основной контейнер */
+.container {
+  width: 100%;
+  margin: 0;
+  background-color: lightblue; /* Цвет фона левой панели */
+  padding: 5px;
+  overflow-y: auto; /* Добавляем прокрутку, если контент не помещается */
+  font-size: small;
+  max-height: 600px;
+}
 
-/* Основные стили таблицы */
+/* Стили таблицы */
 table {
   width: 100%;
   border-collapse: collapse;
-  margin-bottom: 20px;
+  margin-bottom: 10px;
 }
 
 th, td {
-  padding: 10px;
+  padding: 8px;
   border: 1px solid #ddd;
   text-align: left;
 }
@@ -16,6 +25,28 @@ th, td {
 th {
   background-color: #f4f4f4;
   font-weight: bold;
+}
+
+/* Кнопки */
+button {
+  margin-right: 5px;
+  padding: 5px 10px;
+  border: none;
+  border-radius: 4px;
+  background-color: #007bff;
+  color: white;
+  cursor: pointer;
+  font-size: 12px; /* Уменьшаем размер шрифта */
+}
+
+button:hover {
+  background-color: #0056b3;
+}
+
+/* Состояние "нет данных" */
+p {
+  font-style: italic;
+  color: #777;
 }
 
 /* Модальное окно */
@@ -40,25 +71,4 @@ th {
   max-height: 80vh;
   overflow-y: auto;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-}
-
-/* Кнопки */
-button {
-  margin-right: 5px;
-  padding: 5px 10px;
-  border: none;
-  border-radius: 4px;
-  background-color: #007bff;
-  color: white;
-  cursor: pointer;
-}
-
-button:hover {
-  background-color: #0056b3;
-}
-
-/* Состояние "нет данных" */
-p {
-  font-style: italic;
-  color: #777;
 }
