@@ -3,8 +3,8 @@
   box-sizing: border-box; /* Учитывает padding и border в ширине */
   margin: 0;
   padding: 0;
-  display: grid;
-  grid-template-columns: 1fr 2fr; /* Левая колонка = 1 часть, правая = 2 части */
+  display: grid; /* Включаем Grid */
+  grid-template-columns: 1fr 2fr; /* Разделяем на 1/3 и 2/3 */
   grid-template-rows: 95vh; /* Высота контейнера = вся высота viewport */
   max-height: 97%;
 }
@@ -12,18 +12,21 @@
 /* Левая панель */
 .left-panel {
   background-color: #f9f9f9; /* Цвет фона левой панели */
-  padding: 1px;
-  /*overflow-y: auto; !* Добавляем прокрутку, если контент не помещается *!*/
+
+  padding: 20px;
 }
 
 /* Правая панель (карта) */
 .right-panel {
   background-color: #ffffff; /* Цвет фона правой панели */
   width: 100%;
+
+  padding: 20px;
 }
 
-/* Стили для карты */
 #map {
-  height: 99%; /* Карта занимает всю высоту правой панели */
-  width: 99%; /* Карта занимает всю ширину правой панели */
+  flex: 1; /* Карта занимает всю доступную высоту правой панели */
+  width: 100%; /* Карта занимает всю ширину правой панели */
+  position: relative; /* Для корректного позиционирования */
+  overflow: hidden; /* Скрываем всё, что выходит за границы */
 }

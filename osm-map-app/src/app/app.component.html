@@ -1,47 +1,16 @@
 <style>
-  main {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    position: relative;
-  }
 
-  @media screen and (max-width: 650px) {
-    .content {
-      flex-direction: column;
-      width: max-content;
-    }
 
-    .divider {
-      height: 1px;
-      width: 97%;
-      background: gray;
-    }
-  }
 
-  .left-panel {
-    padding: 16px;
-    background: #f5f5f5;
-    border-right: 1px solid #ddd;
-  }
 
-  .right-panel {
-    flex: 1;
-  }
+
 </style>
 
 <main class="main">
   <div class="container">
     <!-- Левая часть -->
     <div class="left-panel">
-      <header>
-        <h1>Hello, osm-map-app</h1>
-        <p>Congratulations! Your app is running. 🎉</p>
-      </header>
 
-      <nav>
-        <button (click)="addRandomPoint()">Добавить случайную точку</button>
-      </nav>
 
       <!-- Вкладки для переключения между таблицами -->
       <mat-tab-group>
