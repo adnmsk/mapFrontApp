@@ -4,7 +4,7 @@
   margin: 0;
   padding: 0;
   display: grid; /* Включаем Grid */
-  grid-template-columns: 1fr 2fr; /* Разделяем на 1/3 и 2/3 */
+  grid-template-columns: 2fr 3fr; /* Разделяем на 2 и 3 */
   grid-template-rows: 95vh; /* Высота контейнера = вся высота viewport */
   max-height: 97%;
 }
